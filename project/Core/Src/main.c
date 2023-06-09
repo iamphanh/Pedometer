@@ -163,7 +163,14 @@ int main(void)
   }
   /* USER CODE END 3 */
 }
-
+void HAL_GPIO_EXIT_Callback(uint6_t GPIO_Pin){
+  if(GPIO_Pin == GPIO_PIN_13){
+    HAL_GPIO_WritePin(GPIOC,GPIO_PIN_13,GPIO_PIN_SET);
+  }
+  if(GPIO_Pin == GPIO_PIN_6){
+    HAL_GPIO_WritePin(GPIOA,GPIO_PIN_6,GPIO_PIN_SET);
+  }
+}
 /**
   * @brief System Clock Configuration
   * @retval None
