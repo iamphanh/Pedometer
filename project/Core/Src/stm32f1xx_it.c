@@ -180,32 +180,8 @@ void PendSV_Handler(void)
 /**
   * @brief This function handles System tick timer.
   */
-void SysTick_Handler(void)
+void SysTick_Handler(void) // xu ly ngat cua systick timer
 {
-  /* USER CODE BEGIN SysTick_IRQn 0 */
-  msTicks++;
 	delayLED++;
-  /* USER CODE END SysTick_IRQn 0 */
   HAL_IncTick();
-  /* USER CODE BEGIN SysTick_IRQn 1 */
-
-  /* USER CODE END SysTick_IRQn 1 */
 }
-
-/******************************************************************************/
-/* STM32F1xx Peripheral Interrupt Handlers                                    */
-/* Add here the Interrupt Handlers for the used peripherals.                  */
-/* For the available peripheral interrupt handler names,                      */
-/* please refer to the startup file (startup_stm32f1xx.s).                    */
-/******************************************************************************/
-
-/**
-  * @brief This function handles EXTI line[9:5] interrupts.
-  */
-
-/* USER CODE BEGIN 1 */
-void DelayMs(uint32_t TICK) {
-	while(msTicks < TICK);
-	msTicks = 0;
-}
-/* USER CODE END 1 */

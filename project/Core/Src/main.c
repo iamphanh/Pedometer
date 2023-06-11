@@ -1,4 +1,3 @@
-/* USER CODE BEGIN Header */
 /**
   ******************************************************************************
   * @file           : main.c
@@ -15,60 +14,30 @@
   *
   ******************************************************************************
   */
-/* USER CODE END Header */
-/* Includes ------------------------------------------------------------------*/
+
 #include "main.h"
 
-/* Private includes ----------------------------------------------------------*/
-/* USER CODE BEGIN Includes */
 #include "CLCD_I2C.h"
 #include "MPU6050.h"
 #include <stdio.h>
-/* USER CODE END Includes */
 
-/* Private typedef -----------------------------------------------------------*/
-/* USER CODE BEGIN PTD */
-
-/* USER CODE END PTD */
-
-/* Private define ------------------------------------------------------------*/
-/* USER CODE BEGIN PD */
-
-/* USER CODE END PD */
-
-/* Private macro -------------------------------------------------------------*/
-/* USER CODE BEGIN PM */
-
-/* USER CODE END PM */
-
-/* Private variables ---------------------------------------------------------*/
 I2C_HandleTypeDef hi2c1;
 
-/* USER CODE BEGIN PV */
+
 CLCD_I2C_Name LCD1;
 uint32_t volatile state = 0, resetCounter = 0;
 extern uint32_t volatile delayLED;
 extern unsigned int stepCount;
-/* USER CODE END PV */
 
-/* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_I2C1_Init(void);
-/* USER CODE BEGIN PFP */
 
-/* USER CODE END PFP */
-
-/* Private user code ---------------------------------------------------------*/
-/* USER CODE BEGIN 0 */
 void EXTI9_5_IRQHandler(void)
 {
-  /* USER CODE BEGIN EXTI9_5_IRQn 0 */
-
-  /* USER CODE END EXTI9_5_IRQn 0 */
   HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_8);
   HAL_GPIO_EXTI_IRQHandler(GPIO_PIN_9);
-  /* USER CODE BEGIN EXTI9_5_IRQn 1 */
+
 	if((GPIOA->IDR & (1u<<8)) == 0) {
 		state++;
 		
@@ -84,48 +53,23 @@ void EXTI9_5_IRQHandler(void)
 		HAL_NVIC_ClearPendingIRQ(EXTI9_5_IRQn);
 	}
 	
-  /* USER CODE END EXTI9_5_IRQn 1 */
 }
-/* USER CODE END 0 */
 
-/**
-  * @brief  The application entry point.
-  * @retval int
-  */
 int main(void)
 {
-  /* USER CODE BEGIN 1 */
   SysTick->LOAD = SystemCoreClock / 1000;
 	SysTick->CTRL = 0x7;
-  /* USER CODE END 1 */
 
-  /* MCU Configuration--------------------------------------------------------*/
-
-  /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
   HAL_Init();
 
-  /* USER CODE BEGIN Init */
-
-  /* USER CODE END Init */
-
-  /* Configure the system clock */
   SystemClock_Config();
 
-  /* USER CODE BEGIN SysInit */
-
-  /* USER CODE END SysInit */
-
-  /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_I2C1_Init();
-  /* USER CODE BEGIN 2 */
 	MPU6050_Init();
 	CLCD_I2C_Init(&LCD1,&hi2c1,0x4E,16,2);
 	char buf[4];
-  /* USER CODE END 2 */
-
-  /* Infinite loop */
-  /* USER CODE BEGIN WHILE */
+	
   while (1)
   {
 		if(resetCounter == 1) {
@@ -139,42 +83,26 @@ int main(void)
 		}
 		
 		if(state % 2 == 0) {
-				HAL_GPIO_WritePin(GPIOA, GPIO_PIN_6, GPIO_PIN_RESET);
+				GPIOC->ODR &= ~(1u<<14);
 			if(delayLED >=1000) {
 				delayLED = 0;
-				HAL_GPIO_TogglePin(GPIOC,GPIO_PIN_13);
+				GPIOC->ODR ^= (1u<<13);
 			}	
 			
 			CLCD_I2C_SetCursor(&LCD1,1,0);
 			CLCD_I2C_WriteString(&LCD1, "So buoc chan");
-			
 			sprintf(buf, "%d", MPU6050_Counter());
 			CLCD_I2C_SetCursor(&LCD1,5,1);
 			CLCD_I2C_WriteString(&LCD1, buf);
 			
 			HAL_Delay(50);
 		} else {
-			HAL_GPIO_WritePin(GPIOC,GPIO_PIN_13,GPIO_PIN_SET);
-			HAL_GPIO_WritePin(GPIOA,GPIO_PIN_6,GPIO_PIN_SET);
+			GPIOC->ODR |= (1u<<13); //Tat LED xanh
+			GPIOC->ODR |= (1u<<14); //Bat LED do-
 		}
-    /* USER CODE END WHILE */
+  }
+}
 
-    /* USER CODE BEGIN 3 */
-  }
-  /* USER CODE END 3 */
-}
-void HAL_GPIO_EXIT_Callback(uint6_t GPIO_Pin){
-  if(GPIO_Pin == GPIO_PIN_13){
-    HAL_GPIO_WritePin(GPIOC,GPIO_PIN_13,GPIO_PIN_SET);
-  }
-  if(GPIO_Pin == GPIO_PIN_6){
-    HAL_GPIO_WritePin(GPIOA,GPIO_PIN_6,GPIO_PIN_SET);
-  }
-}
-/**
-  * @brief System Clock Configuration
-  * @retval None
-  */
 void SystemClock_Config(void)
 {
   RCC_OscInitTypeDef RCC_OscInitStruct = {0};
@@ -206,26 +134,14 @@ void SystemClock_Config(void)
   }
 }
 
-/**
-  * @brief I2C1 Initialization Function
-  * @param None
-  * @retval None
-  */
 static void MX_I2C1_Init(void)
 {
 
-  /* USER CODE BEGIN I2C1_Init 0 */
-
-  /* USER CODE END I2C1_Init 0 */
-
-  /* USER CODE BEGIN I2C1_Init 1 */
-
-  /* USER CODE END I2C1_Init 1 */
-  hi2c1.Instance = I2C1;
-  hi2c1.Init.ClockSpeed = 100000;
-  hi2c1.Init.DutyCycle = I2C_DUTYCYCLE_2;
+  hi2c1.Instance = I2C1; 
+  hi2c1.Init.ClockSpeed = 100000; // Tan so SCL 100khz
+  hi2c1.Init.DutyCycle = I2C_DUTYCYCLE_2; 
   hi2c1.Init.OwnAddress1 = 0;
-  hi2c1.Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
+  hi2c1.Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT; // 7 bit dia chi
   hi2c1.Init.DualAddressMode = I2C_DUALADDRESS_DISABLE;
   hi2c1.Init.OwnAddress2 = 0;
   hi2c1.Init.GeneralCallMode = I2C_GENERALCALL_DISABLE;
@@ -234,71 +150,38 @@ static void MX_I2C1_Init(void)
   {
     Error_Handler();
   }
-  /* USER CODE BEGIN I2C1_Init 2 */
-
-  /* USER CODE END I2C1_Init 2 */
-
 }
 
-/**
-  * @brief GPIO Initialization Function
-  * @param None
-  * @retval None
-  */
+
 static void MX_GPIO_Init(void)
 {
-  GPIO_InitTypeDef GPIO_InitStruct = {0};
-/* USER CODE BEGIN MX_GPIO_Init_1 */
-/* USER CODE END MX_GPIO_Init_1 */
 
-  /* GPIO Ports Clock Enable */
-  __HAL_RCC_GPIOC_CLK_ENABLE();
-  __HAL_RCC_GPIOD_CLK_ENABLE();
-  __HAL_RCC_GPIOA_CLK_ENABLE();
-  __HAL_RCC_GPIOB_CLK_ENABLE();
+	RCC->APB2ENR |= RCC_APB2ENR_IOPCEN_Msk; //1u<<4
+	GPIOC->CRH |= GPIO_CRH_MODE13_Msk; // bit 20::21 la 11
+	
+	/*Config GPIO PC15*/
+	GPIOC->CRH |= GPIO_CRH_MODE14_Msk; // bit 28:29 la 11
+	GPIOC->CRH &= ~GPIO_CRH_CNF14_Msk; // bit 26:27 la 00
+	
+	/* config GPIO PA8 */
+	RCC->APB2ENR |= RCC_APB2ENR_IOPAEN_Msk; //1u<<2
+	GPIOA->CRH &= ~GPIO_CRH_CNF8_Msk;
+	GPIOA->CRH |= GPIO_CRH_CNF8_1; // bit 10
+	GPIOA->ODR |= (1u<<8); // pull up
+	
+	/* config GPIO PA9 */
+	GPIOA->CRH &= ~GPIO_CRH_CNF9_Msk;
+	GPIOA->CRH |= GPIO_CRH_CNF9_1; // bit 10
+	GPIOA->ODR |= (1u<<9); // pull up
+	
+	/* EXTI interrupt init*/
+  EXTI->IMR |= EXTI_IMR_MR8 | EXTI_IMR_MR9; // kich hoat ngat cho A8 va A9
+	EXTI->FTSR |= EXTI_FTSR_FT8 | EXTI_FTSR_FT9; // falling
+	NVIC_SetPriority(EXTI9_5_IRQn,0); // dat muc do uu tien cho ngat A8 va A9
+	NVIC_EnableIRQ(EXTI9_5_IRQn); // kich hoat ham xu ly ngat
 
-  /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOC, GPIO_PIN_13, GPIO_PIN_RESET);
-
-  /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_6, GPIO_PIN_RESET);
-
-  /*Configure GPIO pin : PC13 */
-  GPIO_InitStruct.Pin = GPIO_PIN_13;
-  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
-
-  /*Configure GPIO pin : PA6 */
-  GPIO_InitStruct.Pin = GPIO_PIN_6;
-  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-  GPIO_InitStruct.Pull = GPIO_NOPULL;
-  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
-
-  /*Configure GPIO pins : PA8 PA9 */
-  GPIO_InitStruct.Pin = GPIO_PIN_8|GPIO_PIN_9;
-  GPIO_InitStruct.Mode = GPIO_MODE_IT_FALLING;
-  GPIO_InitStruct.Pull = GPIO_PULLUP;
-  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
-
-  /* EXTI interrupt init*/
-  HAL_NVIC_SetPriority(EXTI9_5_IRQn, 0, 0);
-  HAL_NVIC_EnableIRQ(EXTI9_5_IRQn);
-
-/* USER CODE BEGIN MX_GPIO_Init_2 */
-/* USER CODE END MX_GPIO_Init_2 */
 }
 
-/* USER CODE BEGIN 4 */
-
-/* USER CODE END 4 */
-
-/**
-  * @brief  This function is executed in case of error occurrence.
-  * @retval None
-  */
 void Error_Handler(void)
 {
   /* USER CODE BEGIN Error_Handler_Debug */
