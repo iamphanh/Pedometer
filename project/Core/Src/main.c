@@ -98,7 +98,7 @@ int main(void)
 			HAL_Delay(50);
 		} else {
 			GPIOC->ODR |= (1u<<13); //Tat LED xanh
-			GPIOC->ODR |= (1u<<14); //Bat LED do-
+			GPIOC->ODR |= (1u<<14); //Bat LED do
 		}
   }
 }
@@ -155,11 +155,11 @@ static void MX_I2C1_Init(void)
 
 static void MX_GPIO_Init(void)
 {
-
+  /*Config GPIO PC13*/
 	RCC->APB2ENR |= RCC_APB2ENR_IOPCEN_Msk; //1u<<4
 	GPIOC->CRH |= GPIO_CRH_MODE13_Msk; // bit 20::21 la 11
 	
-	/*Config GPIO PC15*/
+	/*Config GPIO PC14*/
 	GPIOC->CRH |= GPIO_CRH_MODE14_Msk; // bit 28:29 la 11
 	GPIOC->CRH &= ~GPIO_CRH_CNF14_Msk; // bit 26:27 la 00
 	
